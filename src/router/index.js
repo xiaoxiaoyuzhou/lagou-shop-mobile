@@ -44,27 +44,28 @@ const routes = [
   },
   {
     path: '/Pay',
-    name: 'Pay',
+    name: 'pay',
     component: () => import('@/views/Pay/index.vue')
   },
   {
-    path: '/Product',
-    name: 'Product',
-    component: () => import('@/views/Product/index.vue')
+    path: '/Product/:productId',
+    name: 'product',
+    component: () => import('@/views/Product/index.vue'),
+    props: true
   },
   {
     path: '/Recommend',
-    name: 'Recommend',
+    name: 'recommend',
     component: () => import('@/views/Recommend/index.vue')
   },
   {
     path: '/Search',
-    name: 'Search',
+    name: 'search',
     component: () => import('@/views/Search/index.vue')
   },
   {
     path: '/User',
-    name: 'User',
+    name: 'user',
     component: () => import('@/views/User/index.vue')
   },
   {

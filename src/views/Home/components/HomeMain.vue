@@ -1,5 +1,5 @@
 <template>
-  <div class="home-main">
+  <van-pull-refresh class="home-main" v-model="refreshing" @refresh="onRefresh">
     <!-- 轮播图 -->
     <van-swipe class="my-swipe" :autoplay="3000" indicator-color="white">
       <van-swipe-item
@@ -35,21 +35,31 @@
       </van-swipe>
     </van-notice-bar>
     <!-- 商品列表区域 -->
-    <product-list
-      :products-data="productsData"
-    ></product-list>
-  </div>
+    <van-list
+      v-model:loading="state.loading"
+      :finished="state.finished"
+      finished-text="没有更多了"
+      @load="initProductsData"
+    >
+      <product-list
+        :products-data="productsData"
+      ></product-list>
+    </van-list>
+  </van-pull-refresh>
 </template>
 
 <script setup>
 import ProductList from '@/components/ProductList.vue'
 
 import { getDefaultData } from '@/api/home'
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { getProductsData } from '@/api/products'
 
 // 储存首页的所有响应式数据
 const indexData = ref({})
+
+// 下拉刷新的状态控制
+const refreshing = ref(false)
 
 // 封装首页获取数据方法
 const initIndexData = async () => {
@@ -58,6 +68,7 @@ const initIndexData = async () => {
     return
   }
   indexData.value = data.data
+  refreshing.value = false
 }
 initIndexData()
 
@@ -76,21 +87,45 @@ const newsData = computed(() => {
 })
 
 // 商品功能
+const state = reactive({
+  loading: false,
+  finished: false
+})
 let page = 1  // 请求指定页商品数据
+let limit = 4
 // 存储商品的数据
 const productsData = ref([])
 const initProductsData = async () => {
   const { data } = await getProductsData({
-    limit: 4,
+    limit,
     page
   })
   if (data.status !== 200) {
     return
   }
   productsData.value.push(...data.data)
-  console.log(data)
+  // 将本次加载状态置为完成
+  state.loading = false
+  page++
+  // 判断所有数据是否加载完毕
+  if (data.data.length < limit) {
+    state.finished = true
+  }
 }
-initProductsData()
+// 下拉界面刷新功能
+const onRefresh = () => {
+  // 清空界面数据
+  indexData.value = {}
+  productsData.value = []
+  // 页码还原
+  page = 1
+  // 触底加载状态还原
+  state.finished = false
+  state.loading = false
+  // 重新请求数据
+  initIndexData()
+  initProductsData()
+}
 </script>
 
 <style lang="scss" scoped>
