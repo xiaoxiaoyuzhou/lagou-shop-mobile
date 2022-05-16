@@ -98,9 +98,14 @@
         <!-- 总体评价 -->
         <van-cell
           is-link
-          title="用户评价"
-          value="100%好评率"
-          to="/"
+          :title="replyInfo"
+          :value="replyRate"
+          :to="{
+            name: 'comment',
+            params: {
+              productId
+            }
+          }"
         ></van-cell>
         <!-- 评价列表 -->
         <comment-item 
