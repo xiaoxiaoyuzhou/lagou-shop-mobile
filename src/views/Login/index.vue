@@ -9,6 +9,7 @@
         placeholder="用户名"
       />
       <van-field
+        v-if="state.isPassword"
         v-model="state.password"
         type="password"
         name="密码"
@@ -17,6 +18,7 @@
         autocomplete
       />
       <van-field
+        v-else
         v-model="state.captcha"
         center
         clearable
@@ -24,7 +26,12 @@
         placeholder="请输入短信验证码"
       >
         <template #button>
-          <van-button size="small" type="primary">发送验证码</van-button>
+          <van-button
+            size="small"
+            type="primary"
+            @click="sendCaptcha"
+            :disabled="state.isSend"
+          >{{ state.currentText }}</van-button>
         </template>
       </van-field>
     </van-cell-group>
@@ -32,22 +39,82 @@
       <van-button round block type="primary" native-type="submit">
         登录
       </van-button>
-      <span class="change-button">快速登录</span>
+      <span
+        class="change-button"
+        @click="changeMode"
+        v-text="state.changeText"
+      ></span>
     </div>
   </van-form>
 </template>
 
 <script setup>
 import { reactive, ref } from "@vue/reactivity"
+import { computed } from "@vue/runtime-core"
+import { getVerfiCode, getVerify } from '@/api/user'
+import { Toast } from 'vant'
+import { useCountDown } from '@vant/use'
 
-const onSubmit = (values) => {
-  console.log('submit', values)
-}
 const state = reactive({
   username: '',
   password: '',
-  captcha: ''
+  captcha: '',
+  // 登录模式
+  loginMode: 'password',
+  isPassword: computed(() => state.loginMode === 'password'),
+  // 切换文本
+  changeText: computed(() => state.isPassword ? '快速登录' : '密码登录'),
+  // 存储发送状态，用于控制显示效果
+  isSend: false,
+  // 倒计时实例
+  countDown: null,
+  // 根据状态设置要显示的内容
+  currentText: computed(() => state.isSend ? state.countDown.seconds : '发送验证码')
 })
+// 切换登录模式
+function changeMode () {
+  state.loginMode = state.isPassword ? 'captcha' : 'password'
+  state.password = ''
+  state.captcha = ''
+}
+
+// 验证码处理 
+// 1.发送请求
+const sendCaptcha = async() => {
+  // 手机号校验
+  if(!/^(13[0-9]|14[01456879]|15[0-35-9]|16[2567]|17[0-8]|18[0-9]|19[0-35-9])\d{8}$/.test(state.username)) {
+    return Toast.fail('请检查用户名')
+  }
+  // 发送校验请求
+  const { data: v1 } = await getVerfiCode()
+  if (v1.status !== 200) {
+    return Toast.fail('校验请求失败')
+  }
+
+  // 发送验证码请求
+  const { data: v2 } = await getVerify({
+    type: 'login',
+    phone: state.username,
+    key: v1.data.key
+  })
+  if (v2.status !== 200) {
+    return Toast.fail('发送验证码请求失败')
+  }
+
+  // 改变发送按钮的状态
+  const countDown = useCountDown({
+    time: 60 * 1000,
+    onFinish ()  {
+      state.isSend = false
+    }
+  })
+
+  // 开始倒计时
+  countDown.start();
+  state.countDown = countDown.current
+  // 更改发送状态
+  state.isSend = true
+}
 </script>
 
 <style lang="scss" scoped>
