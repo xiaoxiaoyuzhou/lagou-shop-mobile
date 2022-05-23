@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import store from '@/store'
 
 // 路由规则配置
 const routes = [
@@ -15,7 +16,8 @@ const routes = [
   {
     path: '/cart',
     name: 'cart',
-    component: () => import('@/views/Cart/index.vue')
+    component: () => import('@/views/Cart/index.vue'),
+    meta: { requireAuth: true }
   },
   {
     path: '/category',
@@ -30,22 +32,26 @@ const routes = [
   {
     path: '/order',
     name: 'order',
-    component: () => import('@/views/Order/index.vue')
+    component: () => import('@/views/Order/index.vue'),
+    meta: { requireAuth: true }
   },
   {
     path: '/order-confirm',
     name: 'order-confirm',
-    component: () => import('@/views/OrderConfirm/index.vue')
+    component: () => import('@/views/OrderConfirm/index.vue'),
+    meta: { requireAuth: true }
   },
   {
     path: '/order-detail',
     name: 'order-detail',
-    component: () => import('@/views/OrderDetail/index.vue')
+    component: () => import('@/views/OrderDetail/index.vue'),
+    meta: { requireAuth: true }
   },
   {
     path: '/Pay',
     name: 'pay',
-    component: () => import('@/views/Pay/index.vue')
+    component: () => import('@/views/Pay/index.vue'),
+    meta: { requireAuth: true }
   },
   {
     path: '/Product/:productId',
@@ -72,7 +78,8 @@ const routes = [
   {
     path: '/User',
     name: 'user',
-    component: () => import('@/views/User/index.vue')
+    component: () => import('@/views/User/index.vue'),
+    meta: { requireAuth: true }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -85,6 +92,21 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes
+})
+
+// 导航守卫
+router.beforeEach(to => {
+  // 对无需登录的页面
+  if (!to.meta.requireAuth) {
+    return true
+  }
+  // 校验登录状态
+  if (!store.state.user || !window.localStorage.getItem('USER_TOKEN')) {
+    // 跳转登录页面
+    return {
+      name: 'login'
+    }
+  }
 })
 
 export default router

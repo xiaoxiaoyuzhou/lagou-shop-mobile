@@ -36,7 +36,13 @@
       </van-field>
     </van-cell-group>
     <div style="margin: 16px;">
-      <van-button round block type="primary" native-type="submit">
+      <van-button
+        round
+        block
+        type="primary"
+        native-type="submit"
+        @click="submitHandle"
+      >
         登录
       </van-button>
       <span
@@ -51,10 +57,20 @@
 <script setup>
 import { reactive, ref } from "@vue/reactivity"
 import { computed } from "@vue/runtime-core"
-import { getVerfiCode, getVerify } from '@/api/user'
+import { useStore } from "vuex"
+import { useRouter, useRoute } from "vue-router"
+import { 
+  getVerfiCode,
+  getVerify,
+  loginByPassword,
+  loginByCaptcha
+  } from '@/api/user'
 import { Toast } from 'vant'
 import { useCountDown } from '@vant/use'
 
+const store = useStore()
+const router = useRouter()
+const route = useRoute()
 const state = reactive({
   username: '',
   password: '',
@@ -114,6 +130,47 @@ const sendCaptcha = async() => {
   state.countDown = countDown.current
   // 更改发送状态
   state.isSend = true
+}
+
+// 登录处理
+const submitHandle = async () => {
+  // 用户名检测
+  const username = state.username.trim()
+  if (username === '') {
+    return Toast.fail('请检查用户名')
+  }
+  // 统一存储结果
+  let data = ''
+  if (state.isPassword) {
+    // 密码模式
+    const password = state.password.trim()
+    if (password === '') {
+      return Toast.fail('请检查密码')
+    }
+    ({ data } = await loginByPassword({
+      account: username,
+      password
+    }))
+
+  } else {
+    // 验证码模式
+    const captcha = state.captcha.trim()
+    if (captcha === '') {
+      return Toast.fail('请检查手机号')
+    }
+    ({ data } = await loginByCaptcha({
+      phone: username,
+      captcha
+    }))
+  }
+  // 接收响应数据
+  if (data.status !== 200) {
+    return Toast.fail(data.msg)
+  }
+  // 成功时，通过 store 的 mutation 方法存储数据
+  store.commit('setUser', data.data.token)
+  // 跳转页面
+  router.push(route.query.redirect ?? '/user')
 }
 </script>
 
