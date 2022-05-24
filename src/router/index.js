@@ -104,7 +104,10 @@ router.beforeEach(to => {
   if (!store.state.user || !window.localStorage.getItem('USER_TOKEN')) {
     // 跳转登录页面
     return {
-      name: 'login'
+      name: 'login',
+      query: {
+        redirect: to.fullPath
+      }
     }
   }
 })
