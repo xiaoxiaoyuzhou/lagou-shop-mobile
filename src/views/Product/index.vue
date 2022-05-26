@@ -141,16 +141,27 @@
       ></div>
     </van-tab>
   </van-tabs>
+  <!-- 底部栏 -->
+  <van-action-bar>
+    <van-action-bar-icon icon="chat-o" text="客服" color="#ee0a24" />
+    <van-action-bar-icon icon="cart-o" text="购物车" to="/cart" />
+    <van-action-bar-icon icon="star" text="已收藏" color="#ff5000" />
+    <van-action-bar-button type="warning" text="加入购物车" @click="handleCartAdd" />
+    <van-action-bar-button type="danger" text="立即购买" />
+  </van-action-bar>
 </template>
 
 <script setup>
 import { getProductDetails } from '@/api/products'
+import { addToCart } from '@/api/cart'
 import { reactive, ref } from '@vue/reactivity'
 import { computed } from '@vue/runtime-core';
 import router from '../../router';
+import { useStore } from 'vuex';
 
 import CommentItem from '../../components/CommentItem.vue'
 import { onBeforeRouteUpdate } from 'vue-router';
+import { Toast } from 'vant';
 
 const value = ref(5)
 const { productId } = defineProps({
@@ -231,6 +242,37 @@ const initSpec = (spec) => {
 const handleTagChange = (tag, specIndex) => {
   specState.spec[specIndex] = tag
 }
+// 加入购物车功能
+const store = useStore()
+const handleCartAdd = async () => {
+  // 检测用户登录状态
+  if (!store.state.user) {
+    return router.push({
+      name: 'login',
+      query: {
+        redirect: router.currentRoute.value.fullPath
+      }
+    })
+  }
+  // 检测弹出层是否显示
+  if (!specState.show) {
+    return specState.show = true
+  }
+  // 发送请求加入购物车
+  const { data } = await addToCart({
+    // 0代表加入购物车，1代表直接购买
+    new: 0,
+    productId,
+    uniqueId: specDetail.value.unique,
+    cartNum: specState.buyCount
+  })
+  if (data.status !== 200) {
+    return Toast.fail(data.msg)
+  }
+  // 隐藏弹出层
+  specState.show = false
+  Toast.success('成功加入购物车')
+}
 </script>
 
 <style lang="scss" scoped>
@@ -250,6 +292,7 @@ const handleTagChange = (tag, specIndex) => {
 // 底部主体内容容器
 :deep(.van-tabs__content) {
   padding-top: 46px;
+  margin-bottom: 50px;
    .my-swipe .van-swipe-item {
     img {
       width: 375px;
@@ -384,5 +427,10 @@ const handleTagChange = (tag, specIndex) => {
       }
     }
   }
+}
+// 底部工具栏样式
+.van-action-bar {
+  z-index: 10000;
+  width: 100%;
 }
 </style>
