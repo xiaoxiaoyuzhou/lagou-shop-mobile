@@ -1,18 +1,18 @@
 <template>
   <div class="cart-item">
     <!-- 状态选框 -->
-    <van-checkbox v-model="checked" checked-color="#ee0a24"></van-checkbox>
+    <van-checkbox v-model="itemChecked" checked-color="#ee0a24"></van-checkbox>
     <!-- 右侧点击跳转 -->
-    <div class="link">
-      <img src="https://shop.fed.lagounews.com/uploads/attach/2021/07/20210719/51f1a4bb83d1d95dff976b0928287d81.jpg" alt="">
+    <div class="link" @click="handleRouter">
+      <img :src="itemData.image" alt="">
       <div class="info">
-        <p class="title">华为HUAWEI MatePad Pro 10.8英寸2021款</p>
+        <p class="title" v-text="itemData.title"></p>
         <p class="detail">
-          <span class="price">￥1240</span>
+          <span class="price">￥{{ itemData.price }}</span>
           <van-stepper
             max="10"
             button-size="26px"
-            v-model="num"
+            v-model="itemData.num"
           />
         </p>
         <p>
@@ -25,6 +25,37 @@
 
 <script setup>
 import { ref } from "@vue/reactivity";
+import { computed } from "@vue/runtime-core";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+const router = useRouter()
+const store = useStore()
+
+const { itemData } = defineProps({
+  itemData: {
+    type: Object,
+    required: true
+  }
+})
+
+// 点击商品跳转
+const handleRouter = () => {
+  router.push({
+    name: 'product',
+    params: {
+      productId: itemData.productId
+    }
+  })
+}
+
+// 商品勾选
+const itemChecked = computed({
+  get: () => itemData.checked,
+  set: newChecked => {
+    //console.log(newChecked)
+    store.commit('checkedChage', { checked: newChecked, id: itemData.id })
+  }
+})
 
 const checked = ref(true)
 const num = ref(1)
