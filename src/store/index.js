@@ -1,4 +1,5 @@
 import { createStore } from 'vuex'
+import { changeCartItemNum } from '@/api/cart'
 
 export default createStore({
   state () {
@@ -28,6 +29,23 @@ export default createStore({
       //const currentItem = state.cartList.find(item => item.id === id)
       const currentItem = state.cartList.find(item => item.id === id)
       currentItem.checked = checked
+    },
+    countChange (state, {id, count}) {
+      state.cartList.find(item => item.id === id).count = count
+    }
+  },
+  actions: {
+    async countChange ({commit}, payload) {
+      // 提交 mutation 数据
+      commit('countChange', payload)
+      // 发送请求
+      const { data } = await changeCartItemNum({
+        id: payload.id,
+        number: payload.count
+      })
+      if (data.status !== 200) {
+        return
+      }
     }
   }
 })

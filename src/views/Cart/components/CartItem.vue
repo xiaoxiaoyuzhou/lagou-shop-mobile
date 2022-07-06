@@ -9,11 +9,14 @@
         <p class="title" v-text="itemData.title"></p>
         <p class="detail">
           <span class="price">￥{{ itemData.price }}</span>
-          <van-stepper
-            max="10"
-            button-size="26px"
-            v-model="itemData.num"
-          />
+          <view>
+            <van-stepper
+              max="10"
+              button-size="26px"
+              v-model="itemCount"
+              @change="stepperChange"
+            />
+          </view>
         </p>
         <p>
           <span class="del">删除</span>
@@ -54,6 +57,20 @@ const itemChecked = computed({
   set: newChecked => {
     //console.log(newChecked)
     store.commit('checkedChage', { checked: newChecked, id: itemData.id })
+  }
+})
+const stepperChange = () => {
+  event.stopPropagation()
+  console.log('阻止冒泡')
+}
+
+// 个数变化处理
+const itemCount = computed({
+  get: () => parseInt(itemData.num),
+  set (newCount) {
+    console.log(newCount)
+    // 通过 store 中 action 处理
+    store.dispatch('countChange', { count: newCount, id: itemData.id})
   }
 })
 
