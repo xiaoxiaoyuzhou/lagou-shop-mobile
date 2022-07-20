@@ -57,6 +57,7 @@ const itemChecked = computed({
   set: newChecked => {
     //console.log(newChecked)
     store.commit('checkedChage', { checked: newChecked, id: itemData.id })
+    store.getters.checkedItems
   }
 })
 const stepperChange = () => {

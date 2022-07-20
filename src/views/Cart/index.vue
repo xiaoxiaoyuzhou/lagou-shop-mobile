@@ -15,8 +15,8 @@
   </div>
   <van-empty v-else description="还没有加入购物车的商品哦~" />
   <!-- 总计区域 -->
-  <van-submit-bar :price="3050" button-text="提交订单" @submit="onSubmit">
-    <van-checkbox v-model="checked">全选</van-checkbox>
+  <van-submit-bar :price="store.cart.getters.totalPrice * 100" button-text="提交订单" @submit="onSubmit">
+    <van-checkbox v-model="checkedAll">全选</van-checkbox>
   </van-submit-bar>
   <layout-footer></layout-footer>
 </template>
@@ -38,11 +38,11 @@ const initCartList = async () => {
     return
   }
   // 先清除 store 的购物车数据
-  store.commit('clearCartList')
+  store.commit('cart/clearCartList')
 
   await nextTick()
   data.data.valid.forEach(item => {
-    store.commit('addToCart', {
+    store.commit('cart/addToCart', {
       id: item.id,
       checked: true,
       image: item.productInfo.image,
@@ -57,10 +57,19 @@ const initCartList = async () => {
 initCartList()
 
 // 从 Vuex 获取购物车数据
-const cartList = computed(() => store.state.cartList)
+const cartList = computed(() => store.cart.state.cartList)
 
 // 购物车是否有数据
 const hasItem = computed(() => cartList.value.length)
+
+// 全选处理
+const checkedAll = computed({
+  get: () => store.cart.getters.checkedAll,
+  set (status) {
+    //console.log(status)
+    store.commit('cart/changeAll', { status })
+  }
+})
 
 const onClickLeft = () => {
 
